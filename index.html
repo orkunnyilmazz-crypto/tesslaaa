@@ -73,8 +73,8 @@
         let channels = [];
         let hlsInstance = null;
 
-        // *** BURAYA GİTHUB'DAKİ M3U DOSYANIN ADINI YAZ ***
-        const M3U_FILENAME = "liste.m3u"; 
+        // GitHub Raw dosya bağlantısı
+        const M3U_URL = "https://raw.githubusercontent.com/orkunnyilmazz-crypto/tesslaaa/main/liste.m3u";
 
         const logBox = document.getElementById('log-box');
         const statusBadge = document.getElementById('connection-status');
@@ -88,18 +88,16 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        // Sayfa açıldığında GitHub'daki dosyayı otomatik çek
         window.onload = function() {
             loadGithubM3U();
         };
 
         function loadGithubM3U() {
-            log(`GitHub'dan dosya isteniyor: ${M3U_FILENAME}`);
+            log(`GitHub Raw'dan liste çekiliyor...`);
             
-            // Aynı klasördeki dosyayı doğrudan çağırır
-            fetch(M3U_FILENAME)
+            fetch(M3U_URL)
                 .then(res => {
-                    if (!res.ok) throw new Error(`Dosya bulunamadı (HTTP ${res.status})`);
+                    if (!res.ok) throw new Error(`Dosya alınamadı (HTTP ${res.status})`);
                     return res.text();
                 })
                 .then(text => {
@@ -111,7 +109,7 @@
                     log(`Hata: ${err.message}`);
                     statusBadge.innerText = "Durum: Dosya Hatası";
                     statusBadge.className = "text-xs bg-red-950 text-red-400 px-3 py-1.5 rounded-full border border-red-800";
-                    channelListDiv.innerHTML = `<div class="text-red-400 text-center py-4">"${M3U_FILENAME}" dosyası okunamadı. Dosya adını kontrol edin!</div>`;
+                    channelListDiv.innerHTML = `<div class="text-red-400 text-center py-4">Liste okunamadı. Raw bağlantısını kontrol edin!</div>`;
                 });
         }
 
