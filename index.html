@@ -18,13 +18,13 @@
 </head>
 <body class="h-screen flex flex-col justify-between overflow-hidden">
 
-    <!-- Header (Mavi Tema) -->
+    <!-- Header (Mavi Tema - Güncellendiğini Gösterir) -->
     <header class="bg-blue-950 border-b border-blue-800 p-4 flex justify-between items-center shadow-lg">
         <h1 class="text-xl font-bold text-blue-400 flex items-center gap-2">
-            ⚡ Tesla IPTV Streamer <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">Dosya Modu</span>
+            ⚡ Tesla IPTV Streamer <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">Kesin Çözüm v3</span>
         </h1>
         <div class="text-xs bg-blue-900 text-blue-200 px-3 py-1.5 rounded-full border border-blue-700" id="connection-status">
-            Durum: Dosya Bekleniyor...
+            Durum: Mavi Mod Aktif & Hazır
         </div>
     </header>
 
@@ -49,8 +49,7 @@
             
             <div class="flex flex-col gap-2 flex-1 overflow-hidden">
                 <div class="flex justify-between items-center">
-                    <label class="text-xs font-semibold text-blue-300">Kanal Listesi (liste.m3u)</label>
-                    <button onclick="loadM3UFile()" class="text-[10px] bg-blue-800 hover:bg-blue-700 text-blue-100 px-2 py-1 rounded border border-blue-600">Yenile</button>
+                    <label class="text-xs font-semibold text-blue-300">Kanal Listesi</label>
                 </div>
 
                 <!-- Channel Search Bar -->
@@ -58,20 +57,48 @@
 
                 <!-- Channel List Container -->
                 <div id="channel-list" class="flex-1 overflow-y-auto flex flex-col gap-1 pr-1 border-t border-blue-900/40 pt-2 text-xs">
-                    <div class="text-blue-400 text-center py-4">Liste yükleniyor...</div>
+                    <!-- Kanallar buraya yüklenecek -->
                 </div>
             </div>
 
             <!-- Log Box -->
             <div id="log-box" class="bg-slate-950 border border-blue-900/40 rounded-lg p-2 h-16 overflow-y-auto font-mono text-[10px] text-blue-300">
-                [Sistem] jsDislrV dosya okuma modu başlatıldı.<br>
+                [Sistem] Dahili kararlı liste modu yüklendi.<br>
             </div>
         </div>
     </main>
 
     <script>
-        // jsDelivr CDN üzerinden GitHub'daki dosyanı doğrudan ve hatasız çeker
-        const M3U_URL = "https://cdn.jsdelivr.net/gh/orkunnyilmazz-crypto/tesslaaa@main/liste.m3u";
+        // M3U içeriği doğrudan buraya gömülmüştür, dış bağlantı veya fetch hatası riski sıfırdır.
+        const embeddedM3U = `#EXTM3U url-tvg="https://epgshare01.online/epgshare01/epg_ripper_TR1.xml.gz"
+#EXTINF:-1 tvg-id="TRT.1.HD.tr" tvg-logo="http://assets.tvcdn.net/1045ea2f-2453-451d-a55f-ba17539641dd.png" group-title="Ulusal",TRT 1
+https://trt.daioncdn.net/trt-1/master.m3u8?app=web
+#EXTINF:-1 tvg-id="ATV.HD.tr" tvg-logo="http://assets.tvcdn.net/89a47b4b-5d20-4248-9f4c-a3d2756072dd.png" group-title="Ulusal",ATV
+https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/atv/atv_1080p.m3u8
+#EXTINF:-1 tvg-id="SHOW.TV.HD.tr" tvg-logo="http://assets.tvcdn.net/9d873881-bb5e-40f0-88db-8c47aa215e5a.png" group-title="Ulusal",Show TV
+https://ciner.daioncdn.net/showtv/showtv.m3u8?ce=3&app=4bc856ef-4c68-4a94-bc87-37dfaaa66558
+#EXTINF:-1 tvg-id="STAR.TV.HD.tr" tvg-logo="http://assets.tvcdn.net/0c5204fb-e613-4084-b300-8cdcc46309f9.png" group-title="Ulusal",Star TV
+http://dygvideo.dygdigital.com/live/hls/startv4puhu?m3u8
+#EXTINF:-1 tvg-id="KANAL.D.HD.tr" tvg-logo="http://assets.tvcdn.net/a06096dc-fd5e-4103-bfb4-83e612df23ec.png" group-title="Ulusal",Kanal D
+http://live.duhnet.tv/S2/HLS_LIVE/kanalddainp/playlist.m3u8
+#EXTINF:-1 tvg-id="FOX.HD.tr" tvg-logo="http://assets.tvcdn.net/80eb8816-1855-41f5-9002-7a05cc93fe4f.png" group-title="Ulusal",Now TV
+https://uycyyuuzyh.turknet.ercdn.net/nphindgytw/nowtv/nowtv.m3u8
+#EXTINF:-1 tvg-id="TV8.HD.tr" tvg-logo="http://assets.tvcdn.net/f91342d2-bcae-4ee0-a6f8-76a8d32b891b.png" group-title="Ulusal",TV8
+https://tv8.daioncdn.net/tv8/tv8.m3u8?app=7ddc255a-ef47-4e81-ab14-c0e5f2949788
+#EXTINF:-1 tvg-id="TV8.5.HD.tr" tvg-logo="https://i.ibb.co/dgj3MTh/tv85.png" group-title="Ulusal",TV8 5
+https://tv8.daioncdn.net/tv8bucuk/tv8bucuk.m3u8?app=tv8bucuk_web
+#EXTINF:-1 tvg-id="KANAL.7.HD.tr" tvg-logo="http://assets.tvcdn.net/1125734c-3525-4390-b8ed-c50380c70e4d.png" group-title="Ulusal",Kanal 7
+https://kanal7-live.daioncdn.net/kanal7/kanal7.m3u8
+#EXTINF:-1 tvg-id="FlashHaber.tr" tvg-logo="https://i.ibb.co/F5FcvbZ/flash4ok.png",FLASH HABER
+https://flashhaber-live.ercdn.net/flashhaber/flashhaber.m3u8
+#EXTINF:-1 tvg-id="A2.HD.tr" tvg-logo="http://assets.tvcdn.net/9db055df-4bc8-4a68-b0fd-766a5a3113bc.png" group-title="Eglence",A2
+https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/a2tv/a2tv.m3u8
+#EXTINF:-1 tvg-id="TEVE2.HD.tr" tvg-logo="http://assets.tvcdn.net/4cad68c0-fa2c-4b84-a1c2-1f0704eca7a4.png" group-title="Eglence",TEVE2
+http://live.duhnet.tv/S2/HLS_LIVE/teve2np/playlist.m3u8
+#EXTINF:-1 tvg-id="DMAX.HD.tr" tvg-logo="http://assets.tvcdn.net/32da9e04-0514-4e3c-b8e1-854f1fc175ed.png" group-title="Eglence",DMAX
+http://dygvideo.dygdigital.com/live/hls/dmaxdai?m3u8
+#EXTINF:-1 tvg-id="TLC.HD.tr" tvg-logo="http://assets.tvcdn.net/9871d781-b961-45cc-a287-c304f02bef1d.png" group-title="Eglence",TLC
+http://dygvideo.dygdigital.com/live/hls/tlctvdai?m3u8`;
 
         let channels = [];
         let hlsInstance = null;
@@ -89,30 +116,8 @@
         }
 
         window.onload = function() {
-            loadM3UFile();
+            parseM3U(embeddedM3U.trim());
         };
-
-        function loadM3UFile() {
-            log(`Dosya CDN üzerinden okunuyor...`);
-            statusBadge.innerText = "Durum: Yükleniyor...";
-
-            fetch(M3U_URL)
-                .then(res => {
-                    if (!res.ok) throw new Error(`Dosya bulunamadı (HTTP ${res.status})`);
-                    return res.text();
-                })
-                .then(text => {
-                    parseM3U(text);
-                    statusBadge.innerText = "Durum: Hazır (Dosyadan Okundu)";
-                    statusBadge.className = "text-xs bg-blue-900 text-blue-200 px-3 py-1.5 rounded-full border border-blue-700";
-                })
-                .catch(err => {
-                    log(`Hata: ${err.message}`);
-                    statusBadge.innerText = "Durum: Dosya Okunamadı";
-                    statusBadge.className = "text-xs bg-red-950 text-red-400 px-3 py-1.5 rounded-full border border-red-800";
-                    channelListDiv.innerHTML = `<div class="text-red-400 text-center py-4">"liste.m3u" dosyası okunamadı. Deponun Public (Açık) olduğundan emin olun!</div>`;
-                });
-        }
 
         function parseM3U(content) {
             const lines = content.split('\n');
@@ -133,7 +138,7 @@
                     }
                 }
             }
-            log(`${channels.length} kanal dosyadan başarıyla çekildi.`);
+            log(`${channels.length} kanal başarıyla ayrıştırıldı.`);
             renderChannels(channels);
         }
 
