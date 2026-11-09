@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tesla WebCodecs & IPTV Player</title>
+    <title>Tesla IPTV Player</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- HLS.js -->
@@ -11,7 +11,6 @@
     <style>
         body { background-color: #121212; color: #e0e0e0; font-family: sans-serif; }
         input, button { touch-action: manipulation; }
-        /* Scrollbar styling */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #18181b; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
@@ -22,10 +21,10 @@
     <!-- Header -->
     <header class="bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center shadow-lg">
         <h1 class="text-xl font-bold text-amber-500 flex items-center gap-2">
-            ⚡ Tesla WebCodecs & IPTV Streamer
+            ⚡ Tesla IPTV Streamer
         </h1>
         <div class="text-xs bg-zinc-800 px-3 py-1.5 rounded-full text-zinc-400 border border-zinc-700" id="connection-status">
-            Durum: Hazır
+            Durum: M3U Yükleniyor...
         </div>
     </header>
 
@@ -34,77 +33,38 @@
         
         <!-- Video / Canvas Player Container -->
         <div class="flex-1 bg-black rounded-xl overflow-hidden relative flex items-center justify-center border border-zinc-800 shadow-2xl">
-            <!-- Canvas for WebCodecs -->
-            <canvas id="video-canvas" class="w-full h-full object-contain hidden"></canvas>
-            
-            <!-- Standard HTML5 / HLS Video Player -->
             <video id="html5-player" class="w-full h-full object-contain" controls autoplay playsinline></video>
             
-            <!-- Placeholder -->
             <div id="player-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/80 text-zinc-500">
                 <svg class="w-16 h-16 mb-2 text-zinc-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-sm">Bir kanal seçin veya doğrudan yayın linki yükleyin.</p>
+                <p class="text-sm">Listeden bir kanal seçin.</p>
             </div>
         </div>
 
         <!-- Sidebar Control Panel -->
         <div class="w-full lg:w-96 bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col gap-4 shadow-lg overflow-hidden">
             
-            <!-- Tab Controls -->
-            <div class="flex border-b border-zinc-800 text-sm font-semibold">
-                <button onclick="switchTab('m3u')" id="tab-m3u-btn" class="flex-1 py-2 text-amber-500 border-b-2 border-amber-500">M3U Listesi</button>
-                <button onclick="switchTab('direct')" id="tab-direct-btn" class="flex-1 py-2 text-zinc-400">Tek Link</button>
-            </div>
-
-            <!-- Tab 1: M3U File / URL Loader -->
-            <div id="tab-m3u" class="flex flex-col gap-3 flex-1 overflow-hidden">
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs text-zinc-400">.m3u Bağlantısı (URL) veya Dosya Yükle</label>
-                    <input type="text" id="m3u-url" placeholder="https://ornek.com/liste.m3u" class="bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs rounded-lg p-2.5 focus:outline-none focus:border-amber-500">
-                    <div class="flex gap-2">
-                        <button onclick="loadM3uFromUrl()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-zinc-950 font-bold py-2 px-3 rounded-lg text-xs">
-                            URL'den Yükle
-                        </button>
-                        <label class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-center font-semibold py-2 px-3 rounded-lg text-xs cursor-pointer border border-zinc-700">
-                            Dosya Seç
-                            <input type="file" id="m3u-file" accept=".m3u,.m3u8,.txt" class="hidden" onchange="loadM3uFromFile(event)">
-                        </label>
-                    </div>
+            <div class="flex flex-col gap-2 flex-1 overflow-hidden">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-semibold text-zinc-300">Kanal Listesi (GitHub'dan)</label>
+                    <button onclick="loadGithubM3U()" class="text-[10px] bg-zinc-800 hover:bg-zinc-700 text-amber-400 px-2 py-1 rounded border border-zinc-700">Yenile</button>
                 </div>
 
                 <!-- Channel Search Bar -->
-                <input type="text" id="search-channel" oninput="filterChannels()" placeholder="Kanal ara..." class="bg-zinc-950 border border-zinc-800 text-zinc-300 text-xs rounded-lg p-2 focus:outline-none hidden">
+                <input type="text" id="search-channel" oninput="filterChannels()" placeholder="Kanal ara..." class="bg-zinc-950 border border-zinc-800 text-zinc-300 text-xs rounded-lg p-2 focus:outline-none">
 
                 <!-- Channel List Container -->
                 <div id="channel-list" class="flex-1 overflow-y-auto flex flex-col gap-1 pr-1 border-t border-zinc-800 pt-2 text-xs">
-                    <div class="text-zinc-500 text-center py-4">Henüz M3U listesi yüklenmedi.</div>
+                    <div class="text-zinc-500 text-center py-4">Kanallar yükleniyor...</div>
                 </div>
             </div>
 
-            <!-- Tab 2: Direct Stream URL Input -->
-            <div id="tab-direct" class="flex flex-col gap-3 hidden">
-                <label class="text-xs text-zinc-400">Doğrudan Akış URL (HLS .m3u8 veya Video)</label>
-                <input type="text" id="direct-url" placeholder="https://ornek.com/live/stream.m3u8" class="bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs rounded-lg p-2.5 focus:outline-none focus:border-amber-500">
-                <button onclick="playDirectStream()" class="bg-amber-600 hover:bg-amber-500 text-zinc-950 font-bold py-2 px-3 rounded-lg text-xs">
-                    Oynat
-                </button>
-            </div>
-
-            <!-- Engine Selection -->
-            <div class="flex flex-col gap-1 border-t border-zinc-800 pt-2">
-                <label class="text-xs text-zinc-400">Oynatma Motoru</label>
-                <select id="decoder-mode" class="bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs rounded-lg p-2 focus:outline-none">
-                    <option value="auto">Otomatik (HLS.js / Native)</option>
-                    <option value="webcodecs">WebCodecs + Canvas (Deneysel)</option>
-                </select>
-            </div>
-
             <!-- Log Box -->
-            <div id="log-box" class="bg-zinc-950 border border-zinc-800 rounded-lg p-2 h-20 overflow-y-auto font-mono text-[10px] text-zinc-400">
-                [Sistem] Hazır.<br>
+            <div id="log-box" class="bg-zinc-950 border border-zinc-800 rounded-lg p-2 h-16 overflow-y-auto font-mono text-[10px] text-zinc-400">
+                [Sistem] Başlatılıyor...<br>
             </div>
         </div>
     </main>
@@ -113,10 +73,12 @@
         let channels = [];
         let hlsInstance = null;
 
+        // *** BURAYA GİTHUB'DAKİ M3U DOSYANIN ADINI YAZ ***
+        const M3U_FILENAME = "liste.m3u"; 
+
         const logBox = document.getElementById('log-box');
         const statusBadge = document.getElementById('connection-status');
         const videoElement = document.getElementById('html5-player');
-        const canvasElement = document.getElementById('video-canvas');
         const placeholder = document.getElementById('player-placeholder');
         const channelListDiv = document.getElementById('channel-list');
 
@@ -126,14 +88,33 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        function switchTab(tab) {
-            document.getElementById('tab-m3u').classList.toggle('hidden', tab !== 'm3u');
-            document.getElementById('tab-direct').classList.toggle('hidden', tab !== 'direct');
-            document.getElementById('tab-m3u-btn').className = tab === 'm3u' ? 'flex-1 py-2 text-amber-500 border-b-2 border-amber-500' : 'flex-1 py-2 text-zinc-400';
-            document.getElementById('tab-direct-btn').className = tab === 'direct' ? 'flex-1 py-2 text-amber-500 border-b-2 border-amber-500' : 'flex-1 py-2 text-zinc-400';
+        // Sayfa açıldığında GitHub'daki dosyayı otomatik çek
+        window.onload = function() {
+            loadGithubM3U();
+        };
+
+        function loadGithubM3U() {
+            log(`GitHub'dan dosya isteniyor: ${M3U_FILENAME}`);
+            
+            // Aynı klasördeki dosyayı doğrudan çağırır
+            fetch(M3U_FILENAME)
+                .then(res => {
+                    if (!res.ok) throw new Error(`Dosya bulunamadı (HTTP ${res.status})`);
+                    return res.text();
+                })
+                .then(text => {
+                    parseM3U(text);
+                    statusBadge.innerText = "Durum: Hazır";
+                    statusBadge.className = "text-xs bg-green-950 text-green-400 px-3 py-1.5 rounded-full border border-green-800";
+                })
+                .catch(err => {
+                    log(`Hata: ${err.message}`);
+                    statusBadge.innerText = "Durum: Dosya Hatası";
+                    statusBadge.className = "text-xs bg-red-950 text-red-400 px-3 py-1.5 rounded-full border border-red-800";
+                    channelListDiv.innerHTML = `<div class="text-red-400 text-center py-4">"${M3U_FILENAME}" dosyası okunamadı. Dosya adını kontrol edin!</div>`;
+                });
         }
 
-        // --- M3U PARSING ENGINE ---
         function parseM3U(content) {
             const lines = content.split('\n');
             channels = [];
@@ -153,7 +134,7 @@
                     }
                 }
             }
-            log(`${channels.length} adet kanal ayrıştırıldı.`);
+            log(`${channels.length} kanal başarıyla yüklendi.`);
             renderChannels(channels);
         }
 
@@ -163,8 +144,6 @@
                 channelListDiv.innerHTML = '<div class="text-zinc-500 text-center py-4">Kanal bulunamadı.</div>';
                 return;
             }
-
-            document.getElementById('search-channel').classList.remove('hidden');
 
             list.forEach((ch, idx) => {
                 const btn = document.createElement('button');
@@ -181,74 +160,29 @@
             renderChannels(filtered);
         }
 
-        function loadM3uFromUrl() {
-            const url = document.getElementById('m3u-url').value.trim();
-            if (!url) return alert('Lütfen bir M3U URL adresi girin!');
-            
-            log(`M3U dosyası indiriliyor: ${url}`);
-            fetch(url)
-                .then(res => {
-                    if (!res.ok) throw new Error('Ağ yanıtı başarısız');
-                    return res.text();
-                })
-                .then(text => parseM3U(text))
-                .catch(err => {
-                    log(`M3U İndirme Hatası: ${err.message}`);
-                    alert('M3U dosyası indirilemedi. CORS kısıtlaması olabilir veya URL hatalı.');
-                });
-        }
-
-        function loadM3uFromFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            log(`Yerel dosya okunuyor: ${file.name}`);
-            const reader = new FileReader();
-            reader.onload = e => parseM3U(e.target.result);
-            reader.readAsText(file);
-        }
-
-        // --- PLAYBACK ENGINE ---
-        function playDirectStream() {
-            const url = document.getElementById('direct-url').value.trim();
-            if (url) playStream(url, 'Doğrudan Akış');
-        }
-
-        function playStream(url, channelName = '') {
+        function playStream(url, channelName) {
             placeholder.classList.add('hidden');
-            log(`Oynatılıyor: ${channelName || url}`);
-            statusBadge.innerText = `Durum: Oynatılıyor (${channelName || 'Akış'})`;
-            statusBadge.className = "text-xs bg-amber-950 text-amber-400 px-3 py-1.5 rounded-full border border-amber-800";
+            log(`Oynatılıyor: ${channelName}`);
+            statusBadge.innerText = `Oynatılıyor: ${channelName}`;
 
             if (hlsInstance) {
                 hlsInstance.destroy();
                 hlsInstance = null;
             }
 
-            const mode = document.getElementById('decoder-mode').value;
-
-            if (mode === 'webcodecs' && 'VideoDecoder' in window) {
-                canvasElement.classList.remove('hidden');
-                videoElement.classList.add('hidden');
-                log('WebCodecs modu seçili (Ham Akış Verisi Bekleniyor).');
+            if (Hls.isSupported() && (url.includes('.m3u8') || url.includes('.ts'))) {
+                hlsInstance = new Hls();
+                hlsInstance.loadSource(url);
+                hlsInstance.attachMedia(videoElement);
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    videoElement.play();
+                });
+                hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+                    if (data.fatal) log(`Akış Hatası: ${data.type}`);
+                });
             } else {
-                canvasElement.classList.add('hidden');
-                videoElement.classList.remove('hidden');
-
-                if (Hls.isSupported() && (url.includes('.m3u8') || url.includes('.m3u'))) {
-                    hlsInstance = new Hls();
-                    hlsInstance.loadSource(url);
-                    hlsInstance.attachMedia(videoElement);
-                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                        videoElement.play();
-                        log('HLS.js Yayını Başlattı.');
-                    });
-                    hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-                        if (data.fatal) log(`HLS Hatası: ${data.type}`);
-                    });
-                } else {
-                    videoElement.src = url;
-                    videoElement.play().catch(err => log(`Oynatma Hatası: ${err.message}`));
-                }
+                videoElement.src = url;
+                videoElement.play().catch(err => log(`Oynatma Hatası: ${err.message}`));
             }
         }
     </script>
