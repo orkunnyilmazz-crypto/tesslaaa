@@ -3,192 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tesla IPTV Player</title>
-    <!-- Tailwind CSS -->
+    <title>TeslaTV Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- HLS.js -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        body { background-color: #0f172a; color: #e2e8f0; font-family: sans-serif; }
-        input, button { touch-action: manipulation; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif; }
     </style>
 </head>
-<body class="h-screen flex flex-col justify-between overflow-hidden">
+<body class="min-h-screen flex flex-col">
 
-    <!-- Header (Mavi Tema - Güncellendiğini Gösterir) -->
-    <header class="bg-blue-950 border-b border-blue-800 p-4 flex justify-between items-center shadow-lg">
-        <h1 class="text-xl font-bold text-blue-400 flex items-center gap-2">
-            ⚡ Tesla IPTV Streamer <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">Kesin Çözüm v3</span>
-        </h1>
-        <div class="text-xs bg-blue-900 text-blue-200 px-3 py-1.5 rounded-full border border-blue-700" id="connection-status">
-            Durum: Mavi Mod Aktif & Hazır
-        </div>
+    <!-- Üst Başlık -->
+    <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <h1 class="text-xl font-bold text-cyan-400">TESLA TV</h1>
+        <input type="text" id="searchInput" placeholder="Kanal ara..." 
+            class="w-full sm:w-80 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-cyan-500">
     </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col lg:flex-row p-4 gap-4 overflow-hidden">
+    <!-- Ana Ekran / Oynatıcı ve Liste Bölünmüş Alan -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col lg:flex-row gap-4">
         
-        <!-- Video Player Container -->
-        <div class="flex-1 bg-slate-950 rounded-xl overflow-hidden relative flex items-center justify-center border border-blue-900/50 shadow-2xl">
-            <video id="html5-player" class="w-full h-full object-contain" controls autoplay playsinline></video>
-            
-            <div id="player-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-blue-950/40 text-blue-300">
-                <svg class="w-16 h-16 mb-2 text-blue-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <p class="text-sm font-medium">Listeden bir kanal seçin.</p>
+        <!-- Sol / Üst Taraf: Aktif Oynatıcı -->
+        <div class="w-full lg:w-2/3 flex flex-col gap-2">
+            <div class="bg-black rounded-xl overflow-hidden border border-slate-800 aspect-video flex items-center justify-center relative shadow-xl">
+                <video id="videoPlayer" controls autoplay playsinline class="w-full h-full object-contain"></video>
+                <div id="noStream" class="absolute text-slate-500 text-sm">İzlemek için bir kanala tıklayın</div>
             </div>
+            <div id="currentChannelName" class="text-cyan-400 font-semibold text-lg px-1">Seçilen Kanal: Yok</div>
         </div>
 
-        <!-- Sidebar Control Panel -->
-        <div class="w-full lg:w-96 bg-slate-900 border border-blue-900/40 rounded-xl p-4 flex flex-col gap-4 shadow-lg overflow-hidden">
-            
-            <div class="flex flex-col gap-2 flex-1 overflow-hidden">
-                <div class="flex justify-between items-center">
-                    <label class="text-xs font-semibold text-blue-300">Kanal Listesi</label>
-                </div>
-
-                <!-- Channel Search Bar -->
-                <input type="text" id="search-channel" oninput="filterChannels()" placeholder="Kanal ara..." class="bg-slate-950 border border-blue-900 text-blue-100 text-xs rounded-lg p-2 focus:outline-none focus:border-blue-500">
-
-                <!-- Channel List Container -->
-                <div id="channel-list" class="flex-1 overflow-y-auto flex flex-col gap-1 pr-1 border-t border-blue-900/40 pt-2 text-xs">
-                    <!-- Kanallar buraya yüklenecek -->
-                </div>
-            </div>
-
-            <!-- Log Box -->
-            <div id="log-box" class="bg-slate-950 border border-blue-900/40 rounded-lg p-2 h-16 overflow-y-auto font-mono text-[10px] text-blue-300">
-                [Sistem] Dahili kararlı liste modu yüklendi.<br>
-            </div>
+        <!-- Sağ / Alt Taraf: Kanal Listesi -->
+        <div class="w-full lg:w-1/3 flex flex-col bg-slate-900/50 border border-slate-800 rounded-xl p-4 h-[600px] overflow-y-auto">
+            <div id="loading" class="text-center py-10 text-slate-400">Kanallar yükleniyor...</div>
+            <div id="channelList" class="flex flex-col gap-2"></div>
         </div>
     </main>
 
     <script>
-        // M3U içeriği doğrudan buraya gömülmüştür, dış bağlantı veya fetch hatası riski sıfırdır.
-        const embeddedM3U = `#EXTM3U url-tvg="https://epgshare01.online/epgshare01/epg_ripper_TR1.xml.gz"
-#EXTINF:-1 tvg-id="TRT.1.HD.tr" tvg-logo="http://assets.tvcdn.net/1045ea2f-2453-451d-a55f-ba17539641dd.png" group-title="Ulusal",TRT 1
-https://trt.daioncdn.net/trt-1/master.m3u8?app=web
-#EXTINF:-1 tvg-id="ATV.HD.tr" tvg-logo="http://assets.tvcdn.net/89a47b4b-5d20-4248-9f4c-a3d2756072dd.png" group-title="Ulusal",ATV
-https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/atv/atv_1080p.m3u8
-#EXTINF:-1 tvg-id="SHOW.TV.HD.tr" tvg-logo="http://assets.tvcdn.net/9d873881-bb5e-40f0-88db-8c47aa215e5a.png" group-title="Ulusal",Show TV
-https://ciner.daioncdn.net/showtv/showtv.m3u8?ce=3&app=4bc856ef-4c68-4a94-bc87-37dfaaa66558
-#EXTINF:-1 tvg-id="STAR.TV.HD.tr" tvg-logo="http://assets.tvcdn.net/0c5204fb-e613-4084-b300-8cdcc46309f9.png" group-title="Ulusal",Star TV
-http://dygvideo.dygdigital.com/live/hls/startv4puhu?m3u8
-#EXTINF:-1 tvg-id="KANAL.D.HD.tr" tvg-logo="http://assets.tvcdn.net/a06096dc-fd5e-4103-bfb4-83e612df23ec.png" group-title="Ulusal",Kanal D
-http://live.duhnet.tv/S2/HLS_LIVE/kanalddainp/playlist.m3u8
-#EXTINF:-1 tvg-id="FOX.HD.tr" tvg-logo="http://assets.tvcdn.net/80eb8816-1855-41f5-9002-7a05cc93fe4f.png" group-title="Ulusal",Now TV
-https://uycyyuuzyh.turknet.ercdn.net/nphindgytw/nowtv/nowtv.m3u8
-#EXTINF:-1 tvg-id="TV8.HD.tr" tvg-logo="http://assets.tvcdn.net/f91342d2-bcae-4ee0-a6f8-76a8d32b891b.png" group-title="Ulusal",TV8
-https://tv8.daioncdn.net/tv8/tv8.m3u8?app=7ddc255a-ef47-4e81-ab14-c0e5f2949788
-#EXTINF:-1 tvg-id="TV8.5.HD.tr" tvg-logo="https://i.ibb.co/dgj3MTh/tv85.png" group-title="Ulusal",TV8 5
-https://tv8.daioncdn.net/tv8bucuk/tv8bucuk.m3u8?app=tv8bucuk_web
-#EXTINF:-1 tvg-id="KANAL.7.HD.tr" tvg-logo="http://assets.tvcdn.net/1125734c-3525-4390-b8ed-c50380c70e4d.png" group-title="Ulusal",Kanal 7
-https://kanal7-live.daioncdn.net/kanal7/kanal7.m3u8
-#EXTINF:-1 tvg-id="FlashHaber.tr" tvg-logo="https://i.ibb.co/F5FcvbZ/flash4ok.png",FLASH HABER
-https://flashhaber-live.ercdn.net/flashhaber/flashhaber.m3u8
-#EXTINF:-1 tvg-id="A2.HD.tr" tvg-logo="http://assets.tvcdn.net/9db055df-4bc8-4a68-b0fd-766a5a3113bc.png" group-title="Eglence",A2
-https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/a2tv/a2tv.m3u8
-#EXTINF:-1 tvg-id="TEVE2.HD.tr" tvg-logo="http://assets.tvcdn.net/4cad68c0-fa2c-4b84-a1c2-1f0704eca7a4.png" group-title="Eglence",TEVE2
-http://live.duhnet.tv/S2/HLS_LIVE/teve2np/playlist.m3u8
-#EXTINF:-1 tvg-id="DMAX.HD.tr" tvg-logo="http://assets.tvcdn.net/32da9e04-0514-4e3c-b8e1-854f1fc175ed.png" group-title="Eglence",DMAX
-http://dygvideo.dygdigital.com/live/hls/dmaxdai?m3u8
-#EXTINF:-1 tvg-id="TLC.HD.tr" tvg-logo="http://assets.tvcdn.net/9871d781-b961-45cc-a287-c304f02bef1d.png" group-title="Eglence",TLC
-http://dygvideo.dygdigital.com/live/hls/tlctvdai?m3u8`;
+        let allChannels = [];
 
-        let channels = [];
-        let hlsInstance = null;
-
-        const logBox = document.getElementById('log-box');
-        const statusBadge = document.getElementById('connection-status');
-        const videoElement = document.getElementById('html5-player');
-        const placeholder = document.getElementById('player-placeholder');
-        const channelListDiv = document.getElementById('channel-list');
-
-        function log(msg) {
-            const time = new Date().toLocaleTimeString();
-            logBox.innerHTML += `[${time}] ${msg}<br>`;
-            logBox.scrollTop = logBox.scrollHeight;
+        async function loadChannels() {
+            try {
+                const response = await fetch('list.m3u');
+                const text = await response.text();
+                parseM3U(text);
+            } catch (error) {
+                document.getElementById('loading').innerHTML = 'list.m3u bulunamadı!';
+            }
         }
 
-        window.onload = function() {
-            parseM3U(embeddedM3U.trim());
-        };
-
-        function parseM3U(content) {
-            const lines = content.split('\n');
-            channels = [];
-            let currentChannel = null;
+        function parseM3U(data) {
+            const lines = data.split('\n');
+            allChannels = [];
+            let currentChannel = {};
 
             for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
+                let line = lines[i].trim();
                 if (line.startsWith('#EXTINF:')) {
-                    const nameParts = line.split(',');
-                    const name = nameParts.length > 1 ? nameParts.slice(1).join(',') : 'Bilinmeyen Kanal';
-                    currentChannel = { name: name.trim(), url: '' };
+                    let titleMatch = line.match(/,(.+)$/);
+                    currentChannel.name = titleMatch ? titleMatch[1] : 'Kanal';
                 } else if (line && !line.startsWith('#')) {
-                    if (currentChannel) {
-                        currentChannel.url = line;
-                        channels.push(currentChannel);
-                        currentChannel = null;
-                    }
+                    currentChannel.url = line;
+                    allChannels.push(currentChannel);
+                    currentChannel = {};
                 }
             }
-            log(`${channels.length} kanal başarıyla ayrıştırıldı.`);
-            renderChannels(channels);
+
+            document.getElementById('loading').style.display = 'none';
+            renderChannels(allChannels);
         }
 
-        function renderChannels(list) {
-            channelListDiv.innerHTML = '';
-            if (list.length === 0) {
-                channelListDiv.innerHTML = '<div class="text-blue-400 text-center py-4">Kanal bulunamadı.</div>';
+        function renderChannels(channels) {
+            const list = document.getElementById('channelList');
+            list.innerHTML = '';
+            
+            if (channels.length === 0) {
+                list.innerHTML = '<div class="text-center py-10 text-slate-500">Kanal bulunamadı.</div>';
                 return;
             }
 
-            list.forEach((ch, idx) => {
-                const btn = document.createElement('button');
-                btn.className = 'w-full text-left p-2.5 rounded bg-slate-950 hover:bg-blue-950 border border-blue-900/50 text-blue-200 hover:text-blue-400 truncate transition flex items-center justify-between';
-                btn.innerHTML = `<span>${idx + 1}. ${ch.name}</span><span class="text-[10px] text-blue-400">Oynat</span>`;
-                btn.onclick = () => playStream(ch.url, ch.name);
-                channelListDiv.appendChild(btn);
+            channels.forEach((channel, index) => {
+                const item = document.createElement('div');
+                item.className = 'bg-slate-800 hover:bg-slate-700/80 border border-slate-700/50 p-3 rounded-lg flex items-center justify-between cursor-pointer transition-colors';
+                item.innerHTML = `
+                    <span class="text-sm font-medium truncate pr-2">${index + 1}. ${channel.name}</span>
+                    <span class="bg-cyan-500/20 text-cyan-400 text-xs px-2.5 py-1 rounded font-semibold shrink-0">Oynat</span>
+                `;
+                item.onclick = () => playChannel(channel.name, channel.url);
+                list.appendChild(item);
             });
         }
 
-        function filterChannels() {
-            const query = document.getElementById('search-channel').value.toLowerCase();
-            const filtered = channels.filter(c => c.name.toLowerCase().includes(query));
+        function playChannel(name, url) {
+            document.getElementById('currentChannelName').innerText = "Oynatılıyor: " + name;
+            document.getElementById('noStream').style.display = 'none';
+            const video = document.getElementById('videoPlayer');
+            video.src = url;
+            video.play().catch(e => console.log("Oynatma hatası:", e));
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allChannels.filter(c => c.name.toLowerCase().includes(term));
             renderChannels(filtered);
-        }
+        });
 
-        function playStream(url, channelName) {
-            placeholder.classList.add('hidden');
-            log(`Oynatılıyor: ${channelName}`);
-            statusBadge.innerText = `Oynatılıyor: ${channelName}`;
-
-            if (hlsInstance) {
-                hlsInstance.destroy();
-                hlsInstance = null;
-            }
-
-            if (Hls.isSupported() && (url.includes('.m3u8') || url.includes('.ts') || url.includes('?m3u8'))) {
-                hlsInstance = new Hls();
-                hlsInstance.loadSource(url);
-                hlsInstance.attachMedia(videoElement);
-                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                    videoElement.play();
-                });
-                hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-                    if (data.fatal) log(`Akış Hatası: ${data.type}`);
-                });
-            } else {
-                videoElement.src = url;
-                videoElement.play().catch(err => log(`Oynatma Hatası: ${err.message}`));
-            }
-        }
+        loadChannels();
     </script>
 </body>
 </html>
